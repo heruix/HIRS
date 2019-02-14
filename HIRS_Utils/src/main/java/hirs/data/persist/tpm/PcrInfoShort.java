@@ -1,5 +1,6 @@
 package hirs.data.persist.tpm;
 
+import hirs.data.persist.AbstractDigest;
 import hirs.data.persist.TPMMeasurementRecord;
 
 import javax.persistence.AttributeOverride;
@@ -21,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Java class for PcrInfoShort complex type, which was modified from code
@@ -209,7 +211,12 @@ public class PcrInfoShort {
      *             if MessageDigest doesn't recognize "SHA-1"
      */
     public final byte[] getCalculatedDigest() throws NoSuchAlgorithmException {
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+        MessageDigest messageDigest;
+        if (this.isTpm2()) {
+            messageDigest = MessageDigest.getInstance("SHA-256");
+        } else {
+            messageDigest = MessageDigest.getInstance("SHA-1");
+        }
         byte[] computedDigest;
 
         final int sizeOfInt = 4;
@@ -249,5 +256,19 @@ public class PcrInfoShort {
         byteBuffer.put(compositeHash);
 
         return byteBuffer.array();
+    }
+
+    private boolean isTpm2() {
+        // need to get an individual PCR and measure length to determine SHA1 v SHA 256
+        List<TPMMeasurementRecord> pcrs = this.getPcrComposite().getPcrValueList();
+        if (pcrs.size() == 0) {
+            // TODO figure out a reasonable case
+            // it's the case of an empty pcrmask, so maybe it doesn't matter
+            return false;
+        }
+
+        int pcrLen = pcrs.get(0).getHash().getDigest().length;
+        // check if the PCR length is SHA 1, if so it's TPM 1.2, if not it's TPM 2.0
+        return pcrLen == AbstractDigest.SHA1_DIGEST_LENGTH;
     }
 }
