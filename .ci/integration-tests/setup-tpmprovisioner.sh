@@ -54,7 +54,7 @@ function InitTpmEmulator {
   ./libtpm/utils/createek
 
   # Initialize last memory address
-  ./libtpm/utils/nv_definespace -in ffffffff -sz 0
+#  ./libtpm/utils/nv_definespace -in ffffffff -sz 0
 
   popd
 
@@ -63,6 +63,22 @@ function InitTpmEmulator {
 
   echo "Testing TPM Connectivity"
   tpm_selftest
+
+#   EK Certificate
+#  ek_cert_der="/HIRS/.ci/integration-tests/certs/ek_cert.der"
+  ek_cert_der="/HIRS/.ci/integration-tests/certs/tpm1_2_ek_cert.der"
+
+  size=$(cat $ek_cert_der | wc -c)
+#   Define NVRAM space to enable loading of EK cert
+  echo "Define NVRAM location for EK cert of size $size."
+  tpm_nvdefine -i 0x1000f000 -z --permissions="OWNERREAD|OWNERWRITE" -s $size
+#
+#   Load EK into TPM NVRAM
+  echo "Loading EK cert into NVRAM."
+  tpm_nvwrite -i 0x1000f000 -f $ek_cert_der
+
+  echo "Defining nv index 0xffffffff to enable nvlock"
+  tpm_nvdefine -i 0xffffffff -z
 
 	echo "===========TPM Emulator Initialization Complete!==========="
 }

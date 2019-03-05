@@ -317,7 +317,7 @@ class AttestationCAPortal:
     def get_devices(self):
         """Get devices from ACA portal."""
         return self.request("get", "portal/devices/list").json()
-    
+
     def get_ek_certs(self):
         """Get EK certs from ACA portal."""
         return self.request("get", "portal/certificate-request/endorsement-key-credentials/list").json()
@@ -325,14 +325,14 @@ class AttestationCAPortal:
     def get_pk_certs(self):
         """Get PK certs from ACA portal."""
         return self.request("get", "portal/certificate-request/platform-credentials/list").json()
-    
+
     def get_trust_chains(self):
         """Get trust chains from ACA portal."""
         return self.request("get", "portal/certificate-request/trust-chain/list").json()
-    
+
     def upload_ca_cert(self, ca_cert_file):
         file = {'file': open(ca_cert_file, 'rb')}
-        self.request("post", "portal/certificate-request/trust-chain/upload", files=file, operation="upload CA cert")        
+        self.request("post", "portal/certificate-request/trust-chain/upload", files=file, operation="upload CA cert")
 
 def web_request(server_url, method, path, params={}, data={}, files={}, expected_status_codes=[200], operation=None, verify=False):
     url = server_url + path
@@ -418,6 +418,13 @@ def run_hirs_report_and_clear_cache(client_hostname):
         CACHED_XML_REPORT = None
     return client_out
 
+def run_hirs_provisioner(client_hostname):
+    """Runs the hirs provisioner TPM1.2
+    """
+    logging.info("running hirs provisioner tpm1.2 on {0}".format(client_hostname))
+    client_out = send_command("hirs-provisioner provision")
+    return client_out
+
 def run_hirs_provisioner_tpm2(client_hostname):
     """Runs the hirs provisioner TPM2
     """
@@ -474,6 +481,9 @@ def get_current_timestamp():
 
 def is_ubuntu_client(client_os):
     return client_os in ["ubuntu14", "ubuntu16"]
+
+def is_tpm1_2(tpm_version):
+    return tpm_version in ["1.2"]
 
 def is_tpm2(tpm_version):
     return tpm_version in ["2.0", "2"]

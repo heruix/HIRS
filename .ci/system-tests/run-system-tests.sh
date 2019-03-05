@@ -23,7 +23,7 @@ while [[ $tpm_container_status == "running" ]]
 do
   sleep 10
 
-  # Add status message, so Travis will not time out. 
+  # Add status message, so Travis will not time out.
   # It may timeout if it hasn't received output for more than 10 minutes.
   echo "Still running tests, please wait..."
 
